@@ -1,4 +1,6 @@
+using Microsoft.AspNetCore.ResponseCompression;
 using WebSocket.Components;
+using WebSocket.Hubs;
 
 namespace WebSocket;
 public class Program
@@ -11,7 +13,14 @@ public class Program
         builder.Services.AddRazorComponents()
             .AddInteractiveWebAssemblyComponents();
 
+        builder.Services.AddSignalR();
+        builder.Services.AddResponseCompression(options =>
+            options.MimeTypes = ResponseCompressionDefaults.MimeTypes.Concat(["application/octet-stream"])
+        );
+
         var app = builder.Build();
+
+        app.UseResponseCompression();
 
         // Configure the HTTP request pipeline.
         if (app.Environment.IsDevelopment())
@@ -30,6 +39,7 @@ public class Program
         app.UseStaticFiles();
         app.UseAntiforgery();
 
+        app.MapHub<ChatHub>("/chathub");
         app.MapRazorComponents<App>()
             .AddInteractiveWebAssemblyRenderMode()
             .AddAdditionalAssemblies(typeof(Client._Imports).Assembly);
